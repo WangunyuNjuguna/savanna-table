@@ -77,7 +77,7 @@ export function exportSave(career) {
   const blob = new Blob([JSON.stringify(career, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "savanna-table-" + (career && career.name ? career.name : "career").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase() + ".json";
+  a.download = `savanna-table-${(career?.name || "career").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}.json`;
   document.body.appendChild(a); // attached = reliable on mobile browsers
   a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
