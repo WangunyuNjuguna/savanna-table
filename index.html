@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Savanna Table - Phase 1 skeleton. Static only, no frameworks. -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1F3D2B" />
+  <meta name="description" content="Savanna Table - a warm Kenyan cooking and hotel business story game." />
+  <title>Savanna Table</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/print.css" media="print" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🍲</text></svg>" />
+</head>
+<body>
+  <!-- Skip link helps keyboard users. -->
+  <a class="skip" href="#main">Skip to main content</a>
+
+  <!-- Top bar: cash, month, reputation. Updated by JS. -->
+  <header class="topbar" role="banner">
+    <div class="brand">
+      <!-- Tiny inline SVG sufuria logo. No images needed. -->
+      <svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true">
+        <ellipse cx="20" cy="26" rx="13" ry="8" fill="#1F3D2B" stroke="#E0A24E" stroke-width="2"/>
+        <path d="M12 18 q2 -3 4 0 M18 16 q2 -4 4 0 M24 18 q2 -3 4 0" stroke="#9A5B14" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <strong>Savanna Table</strong>
+        <small id="top-sub">Karibu! 🌿</small>
+      </div>
+    </div>
+    <div class="top-stats" role="status" aria-live="polite">
+      <div class="stat"><span data-i18n="cash">Cash</span><b id="stat-cash">KSh 0</b></div>
+      <div class="stat"><span data-i18n="month">Month</span><b id="stat-month">–</b></div>
+      <div class="stat"><span aria-label="Reputation">⭐</span><b id="stat-rep">3.0</b></div>
+    </div>
+    <button id="btn-sound" class="icon-btn" aria-label="Toggle sound">🔇</button>
+    <button id="btn-settings" class="icon-btn" aria-label="Settings">⚙️</button>
+  </header>
+
+  <!-- Main area. Screens are lazy-rendered here by js/router.js -->
+  <main id="main" class="main" tabindex="-1">
+    <div id="screen" class="screen"><!-- JS fills this --></div>
+
+    <!-- Mentor tip card (Mama Chef). Always kind, never scolding. -->
+    <aside class="mentor" aria-label="Mama Chef tip">
+      <div class="mentor-face" aria-hidden="true">👩🏾‍🍳</div>
+      <div>
+        <strong>Mama Chef 💛</strong>
+        <p id="mentor-text">Pole pole ndogo ndogo... start small, dream big!</p>
+      </div>
+    </aside>
+
+    <!-- Save slots + export/import live here in Phase 1. -->
+    <section class="card saves" aria-label="Career saves">
+      <h2 data-i18n="saves">My Careers (3 slots)</h2>
+      <div id="slots" class="slots"></div>
+      <div class="row">
+        <button id="btn-export" class="btn secondary">⬇️ Export Save</button>
+        <button id="btn-import" class="btn secondary">⬆️ Import Save</button>
+        <input id="file-import" type="file" accept="application/json" hidden />
+      </div>
+      <p class="hint">Autosaves after every turn. Estimates only — not tax or legal advice.</p>
+    </section>
+  </main>
+
+  <!-- Bottom nav: 5 big tap targets (min 44px). -->
+  <nav class="tabbar" aria-label="Main">
+    <button data-screen="hotel" class="tab">🏨<span data-i18n="hotel">Hotel</span></button>
+    <button data-screen="kitchen" class="tab active">🍲<span data-i18n="kitchen">Kitchen</span></button>
+    <button data-screen="catering" class="tab">🎪<span data-i18n="catering">Catering</span></button>
+    <button data-screen="money" class="tab">💰<span data-i18n="money">Money</span></button>
+    <button data-screen="market" class="tab">🛍️<span data-i18n="market">Market</span></button>
+  </nav>
+
+  <!-- Settings sheet: language, difficulty, sound, reset. -->
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-label="Settings">
+      <h2>Settings</h2>
+      <label>Language / Lugha
+        <select id="set-lang">
+          <option value="en">English</option>
+          <option value="sw">Kiswahili</option>
+        </select>
+      </label>
+      <label>Difficulty
+        <select id="set-diff">
+          <option value="easy">Easy (gentle)</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard (spicy!)</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="set-sound" /> Tiny sounds (off by default)</label>
+      <div class="row">
+        <button id="btn-close-settings" class="btn primary">Done / Sawa</button>
+        <button id="btn-wipe" class="btn danger">Fresh Start (clear slot)</button>
+      </div>
+      <p class="hint">Phase 1 skeleton. Full game arrives in later phases.</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <!-- Pop-up modal: New Career reveal, lessons, Year in Review. Filled by JS. -->
+  <div id="modal" class="sheet" hidden><div class="sheet-card" role="dialog" aria-modal="true" id="modal-card"></div></div>
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+
+  <!-- ES modules only. No CDN. Order matters: main boots the rest. -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
