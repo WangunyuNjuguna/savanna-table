@@ -3,6 +3,7 @@
 import { store } from "./store.js";
 import { FIRST_NAMES, FLAWS, STAFF_DILEMMAS, DISH_BASES, DISH_TWISTS, BRANCHES, MISHAPS } from "../data/staff.js";
 import { sfx } from "./sound.js";
+import { tickClock } from "./engine.js";
 const ksh = (n) => "KSh " + Math.round(n).toLocaleString("en-KE");
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pickW = (arr) => { // weighted pick by .w
@@ -61,7 +62,7 @@ export function hireApplicant(id) {
   if (c.cash < 3000) return "Need KSh 3,000 signing bonus.";
   const a = c.applicants.splice(i, 1)[0];
   a.flaw = pickW(FLAWS).id; // trial month reveals the truth...
-  a.mood = 80; c.cash -= 3000; c.actionsLeft -= 1;
+  a.mood = 80; c.cash -= 3000; tickClock(c); c.actionsLeft -= 1;
   c.monthProfit = (c.monthProfit || 0) - 3000;
   c.crew.push(a);
   if (!c.badges.includes("firstHire")) c.badges.push("firstHire");
@@ -161,7 +162,7 @@ export function createDish(name, base, twist) {
   if (!name || name.length < 2) return "Give your dish a name first! 📝";
   if (c.cash < 8000) return "Tastings cost KSh 8,000. Cook a gig first! 💪";
   if (c.actionsLeft <= 0) return "No energy left. 😴";
-  c.cash -= 8000; c.actionsLeft -= 1;
+  c.cash -= 8000; tickClock(c); c.actionsLeft -= 1;
   c.monthProfit = (c.monthProfit || 0) - 8000;
   const dish = { id: "d" + Date.now(), name: name.slice(0, 24), base, twist, status: "tasting", royalty: 0, monthsLeft: 0 };
   c.dishes.push(dish);
