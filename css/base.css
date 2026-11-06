@@ -1,0 +1,35 @@
+/* base.css - colours, fonts, reset. Small and commented. */
+:root {
+  --green: #1F3D2B;   /* calm deep green */
+  --cream: #F6F0E4;   /* warm background */
+  --amber: #E0A24E;   /* happy highlight */
+  --brown: #9A5B14;   /* earthy accent */
+  --ink: #1B1B18;      /* text */
+  --card: #FFFDF7;     /* card white */
+  --line: #E7DCC6;
+  --radius: 14px;
+  --tap: 48px;         /* min tap target, above 44px rule */
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 720px; /* phone-first, centred on desktop */
+  margin-inline: auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+/* Elegant serif only for headings (system serif, no download). */
+h1, h2, h3, .serif { font-family: Georgia, "Times New Roman", serif; color: var(--green); }
+button, select, input { font: inherit; }
+.skip {
+  position: absolute; left: -999px; background: var(--green); color: #fff; padding: 8px 12px;
+}
+.skip:focus { left: 8px; top: 8px; z-index: 99; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }

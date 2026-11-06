@@ -1,0 +1,26 @@
+/* animations.css - transform + opacity only (fast on 3GB RAM phones). */
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+.screen > * { animation: rise .22s ease-out; }
+/* Steam wisps float upward. */
+.steam .s1, .steam .s2, .steam .s3 { display: inline-block; }
+@keyframes steamUp { 0% { transform: translateY(6px); opacity: 0; } 50% { opacity: .9; } 100% { transform: translateY(-10px); opacity: 0; } }
+.steam text { animation: steamUp 2.4s infinite; }
+.steam .s2 { animation-delay: .5s; } .steam .s3 { animation-delay: 1s; }
+.steam i { display: inline-block; animation: steamUp 2.2s infinite; font-style: normal; }
+.steam i:nth-child(2) { animation-delay: .4s; } .steam i:nth-child(3) { animation-delay: .8s; }
+/* Flame flicker (scale only). */
+@keyframes flick { 0%, 100% { transform: scaleX(1); opacity: .8; } 50% { transform: scaleX(1.08); opacity: 1; } }
+.flick { animation: flick 1.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+/* Crowd bounce. */
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.bob { animation: bob 1.8s ease-in-out infinite; }
+/* Milestone glow for the hotel (opacity pulse, cheap). */
+@keyframes glowPulse { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
+.glow { animation: glowPulse 2s ease-in-out infinite; }
+/* Coin pop. */
+@keyframes pop { 0% { transform: scale(.6); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.pop { animation: pop .3s ease-out; }
+.screen.leaving { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

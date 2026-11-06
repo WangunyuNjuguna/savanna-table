@@ -1,0 +1,6 @@
+/* print.css - clean print for "My Plan" (Phase 9). For now: print cards only. */
+@media print {
+  .topbar, .tabbar, .saves, .sheet, .toast, .mentor { display: none !important; }
+  body { max-width: 100%; background: #fff; }
+  .card { box-shadow: none; border: 1px solid #999; break-inside: avoid; }
+}
