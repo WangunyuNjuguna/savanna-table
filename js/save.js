@@ -16,7 +16,7 @@ export function blankCareer(name = "Career 1") {
   return {
     version: SAVE_VERSION,
     name, createdAt: Date.now(), updatedAt: Date.now(),
-    month: 1, year: 1, cash, reputation: 3.0,
+    month: 1, year: 1, day: 1, cash, reputation: 3.0,
     loyalty: 50, morale: 70, skill: 10,
     path: null, history: [cash],
     // playable fields (engine.js ensures these on old saves too):
@@ -27,7 +27,7 @@ export function blankCareer(name = "Career 1") {
     cookStyle: "exact", recipes: ["Pilau", "Chapati"], regulars: {},
     crew: [], crewMigrated: false, applicants: [], dishes: [], branches: [], pendingStaff: null,
     badges: [], monthProfit: 0, balanceDue: 0, goal: "Earn your first KSh 10,000 profit",
-    report: null, sufuriaTaps: 0, lessons: 0, hardMonths: 0,
+    report: null, sufuriaTaps: 0, lessons: 0, hardMonths: 0, seenGuide: false,
     perk: "warm smile 😊", upgradesOwned: ["home"]
   };
 }
@@ -77,7 +77,7 @@ export function exportSave(career) {
   const blob = new Blob([JSON.stringify(career, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `savanna-table-${(career?.name || "career").replace(/\s+/g, "-").toLowerCase()}.json`;
+  a.download = `savanna-table-${(career?.name || "career").replace(/\\s+/g, "-").toLowerCase()}.json`;
   document.body.appendChild(a); // attached = reliable on mobile browsers
   a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);

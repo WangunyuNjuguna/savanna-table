@@ -20,7 +20,7 @@ function paint() {
   const c = store.career, s = store.settings;
   if (c) ensure(c);
   $("stat-cash").textContent = c ? ksh(c.cash) : "—";
-  $("stat-month").textContent = c ? `M${c.month} Y${c.year}` : "—";
+  $("stat-month").textContent = c ? `D${c.day || 1} · M${c.month} Y${c.year}` : "—";
   $("stat-rep").textContent = c ? c.reputation.toFixed(1) : "—";
   $("mentor-text").textContent = c?.report?.lesson || MENTOR_TIPS[(c?.month ?? 1) % MENTOR_TIPS.length];
   applyLang(s.lang);
@@ -74,6 +74,7 @@ function newCareerSheet(i) {
     sfx.win(); confetti();
     store.setCareer(i, c); store.setSlot(i);
     m.hidden = true; paint(); go("kitchen");
+    if (!c.seenGuide) { c.seenGuide = true; store.update(() => {}); setTimeout(showGuide, 600); }
     toast(`Karibu! Path: ${b.textContent.trim().slice(0, 20)}. Perk: ${c.perk} 💛`);
   }));
 }
@@ -91,6 +92,20 @@ function confetti() {
   sfx.win();
 }
 
+// ❓ Guide: the whole game in 60 seconds. Auto-shows on first career.
+function showGuide() {
+  const m = $("modal"), card = $("modal-card");
+  m.hidden = false;
+  card.innerHTML = `<h2>❓ How to play (60 seconds)</h2>
+    <div class="slot active"><span>🎯</span><div><strong>Your dream: KSh 1M net worth → boutique hotel.</strong><br><small>Skilled players get there around year 4. No game over — hard months just teach.</small></div></div>
+    <div class="slot"><span>📅</span><div><strong>Each month = 30 days, 3 energy ⚡.</strong><br><small>Every job moves the clock: Morning → Afternoon → Evening. Out of energy? End the Month for payday + report.</small></div></div>
+    <div class="slot"><span>👉</span><div><strong>Follow the green “Now do this” bar.</strong><br><small>It always shows your single next step and jumps you there. You can't get lost.</small></div></div>
+    <div class="slot"><span>🗺️</span><div><strong>The 5 tabs, one job each:</strong><br><small>🍲 Kitchen = cook + decide · 🛍️ Market = buy food · 🎪 Catering = win clients · 🏨 Hotel = grow + hire · 💰 Money = loans + card.</small></div></div>
+    <div class="slot"><span>💛</span><div><strong>Mama Chef's 3 rules:</strong><br><small>1) Deposits first. 2) Beef, veg + milk spoil — buy small. 3) Safe roads are slow, bold roads can hurt.</small></div></div>
+    <div class="row"><button class="btn primary" id="guide-ok" style="flex:1">Sawa — let's cook! 🍲</button></div>`;
+  card.querySelector("#guide-ok").onclick = () => { m.hidden = true; sfx.good(); };
+}
+
 function boot() {
   document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => { sfx.click(); go(b.dataset.screen); }));
   $("btn-sound").onclick = () => {
@@ -98,6 +113,12 @@ function boot() {
     paint(); toast(store.settings.sound ? "Sounds on! 🎶" : "Sounds off. 🤫");
     if (store.settings.sound) sfx.good();
   };
+  $("btn-guide").onclick = () => { sfx.click(); showGuide(); };
+  // Green "Now do this" buttons jump to the right tab (works on every screen).
+  document.addEventListener("click", (e) => {
+    const g = e.target.closest("[data-goto]");
+    if (g) { sfx.click(); go(g.dataset.goto); }
+  });
   $("btn-settings").onclick = () => {
     $("sheet").hidden = false;
     $("set-lang").value = store.settings.lang;
