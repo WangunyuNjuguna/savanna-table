@@ -3,6 +3,7 @@
 import { store } from "./store.js";
 import { SUPPLIES, PER_GUEST, PER_ROOM_MONTH, ROOMS_BY_UPGRADE, ROOM_RATE, CONTRACTS } from "../data/pantry.js";
 import { sfx } from "./sound.js";
+import { tickClock } from "./engine.js";
 const ksh = (n) => "KSh " + Math.round(n).toLocaleString("en-KE");
 
 export const sup = (id) => SUPPLIES.find((s) => s.id === id);
@@ -31,7 +32,7 @@ export function buySupply(id, qty) {
   const cost = Math.round(s.price * qty);
   if (c.cash < cost) return `Need ${ksh(cost)} for ${qty} ${s.unit} ${s.name}. Cook a gig first! 💪`;
   c.cash -= cost; c.pantry[id] = Math.round(((c.pantry[id] || 0) + qty) * 100) / 100;
-  c.pantryAge[id] = 0; c.actionsLeft -= 1;
+  c.pantryAge[id] = 0; tickClock(c); c.actionsLeft -= 1;
   c.monthProfit = (c.monthProfit || 0) - cost;
   store.update(() => {}); sfx.cash();
   return `Bought ${qty} ${s.unit} ${s.name} for ${ksh(cost)}. 🧺`;
@@ -76,7 +77,7 @@ export function cookGig(guests, style) {
     }
   }
   const stillMissing = Object.keys(missing);
-  c.actionsLeft -= 1;
+  tickClock(c); c.actionsLeft -= 1;
   // Not enough food -> shortfall: sad guests, rep hit (too LITTLE food lesson).
   if (stillMissing.length) {
     const s = sup(stillMissing[0]);
@@ -105,7 +106,7 @@ export function meetSupplier(id) {
   if (c.contracts.includes(id)) return "Already delivering. ✅";
   if (c.actionsLeft <= 0) return "No energy left. 😴";
   if (c.cash < ct.fee) return `Need ${ksh(ct.fee)} introduction fee.`;
-  c.cash -= ct.fee; c.contracts.push(id); c.actionsLeft -= 1;
+  c.cash -= ct.fee; c.contracts.push(id); tickClock(c); c.actionsLeft -= 1;
   c.monthProfit = (c.monthProfit || 0) - ct.fee;
   store.update(() => {}); sfx.good();
   return `${ct.name} shakes your hand! 🤝 ${ct.desc}. Shortfalls now auto-debit to your card (+10%).`;

@@ -3,6 +3,7 @@
 import { store } from "./store.js";
 import { DILEMMAS } from "../data/choices.js";
 import { sfx } from "./sound.js";
+import { tickClock } from "./engine.js";
 
 export function currentDilemma() {
   const c = store.career; if (!c) return null;
@@ -18,6 +19,7 @@ export function resolveChoice(dilemmaId, side) {
   const d = DILEMMAS.find((x) => x.id === dilemmaId); if (!d) return "Hmm?";
   const opt = side === "bold" ? d.bold : d.safe;
   c["done_" + d.id + "_" + c.year + "_" + c.month] = true;
+  tickClock(c); // deciding takes time: the clock moves
 
   // Track style: safe streak vs bold streak (used for lessons + loans).
   c.safeStreak = side === "safe" ? (c.safeStreak || 0) + 1 : 0;

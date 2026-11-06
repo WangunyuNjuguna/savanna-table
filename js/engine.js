@@ -13,6 +13,27 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 export const ksh = (n) => "KSh " + Math.round(n).toLocaleString("en-KE");
 
+// Simulator clock: every job moves time forward (~10 days each).
+// Day 1-10 = morning, 11-20 = afternoon, 21-30 = evening. New month = Day 1.
+export function tickClock(c) {
+  c.day = Math.min(30, (c.day || 1) + 10);
+}
+export function clockText(c) {
+  const d = Math.min(30, c.day || 1);
+  const part = d <= 10 ? "🌅 Morning" : d <= 20 ? "☀️ Afternoon" : "🌙 Evening";
+  return `📅 Day ${d} of 30 · ${part}`;
+}
+// One clear next step, so the player never feels lost.
+export function nextStep(c) {
+  if (!c) return { text: "Start a career below 🌱", tab: "kitchen" };
+  if (c.pendingStaff) return { text: "Decide the staff issue 👥", tab: "kitchen" };
+  if (c.pendingQuote) return { text: "Answer the waiting client 💬", tab: "catering" };
+  const p = c.pantry || {};
+  if ((p.rice || 0) < 3 || (p.flour || 0) < 2 || (p.beef || 0) < 2) return { text: "Buy food in the Market 🧺", tab: "market" };
+  if ((c.actionsLeft || 0) <= 0) return { text: "End the month for payday ➡️", tab: "kitchen" };
+  return { text: "Cook a catering job 🍲", tab: "kitchen" };
+}
+
 // Net worth = cash + equipment + stock value + property - debt.
 export function netWorth(c) {
   return Math.round((c.cash || 0) + (c.equipValue || 0) + (c.stock || 0) * 1500 + (c.property || 0) - (c.debt || 0));
@@ -32,6 +53,7 @@ export function ensure(c) {
   // Migrate old single staff number into cooks.
   if (typeof c.staff === "number" && c.staff > 0 && !c.staffBy.cooks) c.staffBy.cooks = c.staff;
   c.actionsLeft = c.actionsLeft ?? 3;
+  c.day = c.day ?? 1; // simulator clock: Day 1-30 of the month
   c.stock = c.stock ?? 2; c.equipValue = c.equipValue ?? 5000;
   c.property = c.property ?? 0; c.debt = c.debt ?? 0;
   c.rep = c.reputation; // alias guard
@@ -81,6 +103,7 @@ export function doAction(kind) {
     msg = "Chai break with Mama Chef. Morale +12. ☕";
     sfx.steam();
   }
+  tickClock(c);
   c.actionsLeft -= 1;
   store.update(() => {});
   checkBadges();
@@ -93,7 +116,7 @@ export function buyStock(n = 1) {
   ensure(c);
   const cost = 4500 * n;
   if (c.cash < cost) return { ok: false, msg: "Pole — not enough cash. Try a gig first." };
-  c.cash -= cost; c.stock += n; c.actionsLeft -= 1;
+  c.cash -= cost; c.stock += n; tickClock(c); c.actionsLeft -= 1;
   c.monthProfit = (c.monthProfit || 0) - cost;
   store.update(() => {}); sfx.cash();
   return { ok: true, msg: `Bought ${n} stock for ${ksh(cost)}. Wise planning! 🧺` };
@@ -115,6 +138,7 @@ export function answerQuote(accepted) {
   c.balanceDue = (c.balanceDue || 0) + Math.round(revenue * 0.5);
   c.monthProfit = (c.monthProfit || 0) + profit;
   c.reputation = Math.min(5, c.reputation + (diff < 0.2 ? 0.1 : 0.03));
+  tickClock(c);
   c.pendingQuote = null; c.enquiries += 1;
   store.update(() => {}); checkBadges(); sfx.cash();
   return `Hongera! Job booked 🎉 Deposit banked, balance ${ksh(c.balanceDue)} comes month-end.`;
@@ -187,7 +211,7 @@ export function endMonth() {
   const profit = (c.monthProfit || 0) + got - bills;
   c.history.push(Math.round(c.cash));
   c.report = { month: c.month, year: c.year, profit: Math.round(profit), bills, got, events: log, season: pick(SEASONS), netWorth: netWorth(c) };
-  c.monthProfit = 0; c.enquiries += 1;
+  c.monthProfit = 0; c.enquiries += 1; c.day = 1; // new month, Day 1
   c.month++;
   if (c.month > 12) { c.month = 1; c.year++; c.yearReview = true; }
   // Adaptive: track hard months.
