@@ -1,6 +1,6 @@
 // js/screens.js - all 5 tabs, fully playable. One screen at a time (small DOM).
 import { store } from "./store.js";
-import { ksh, netWorth, doAction, buyStock, answerQuote, endMonth } from "./engine.js";
+import { ksh, netWorth, doAction, buyStock, answerQuote, endMonth, clockText, nextStep } from "./engine.js";
 import { LADDER } from "../data/upgrades.js";
 import { costingQuiz, answerCosting, capacityQuiz, tryCombo } from "./minigames.js";
 import { BADGES } from "./achievements.js";
@@ -23,7 +23,9 @@ export function renderScreen(name) {
   return market();
 }
 function msgBar(c) {
-  return `<p class="hint">⚡ ${c.actionsLeft} actions left · 🎯 Next: <b>${c.goal}</b> · ✨ Perk: ${c.perk}</p>`;
+  const s = nextStep(c);
+  return `<div class="guidebar"><span>${clockText(c)} · ⚡${c.actionsLeft}</span><span>👉 Now: <b>${s.text}</b></span><button class="btn primary" data-goto="${s.tab}" style="min-height:44px">Go ➡️</button></div>
+  <p class="hint">🎯 Goal: <b>${c.goal}</b> · ✨ ${c.perk}</p>`;
 }
 
 // KITCHEN: dashboard + actions + month report + hidden pot game.
@@ -52,7 +54,7 @@ function kitchen() {
       <button class="btn secondary" data-cook="scant">Scant −20% ⚠️</button>
     </div>
     <p class="hint">Pantry: ${pantryLine(c)}</p>
-    <h3>What else?</h3>
+    <h3>🧑🏾‍🍳 Today's work (each costs 1 ⚡)</h3>
     <div class="row">
       <button class="btn secondary" data-a="quote">📋 Find client</button>
       <button class="btn secondary" data-a="train">📚 Train</button>
@@ -61,7 +63,7 @@ function kitchen() {
     </div>
     <div class="row"><button class="btn primary" data-a="endmonth" style="flex:1">➡️ End Month (report!)</button></div>
     <p id="kmsg" class="hint"></p>
-    <h3>Cash journey</h3><div class="bars">${bars}</div>
+    <details class="fold"><summary>📊 Cash journey (last 12 months)</summary><div class="bars">${bars}</div></details>
     <h3>Month-end report</h3><div id="report">${reportHtml(c)}</div>
     <div class="steam" id="pot" role="button" tabindex="0" aria-label="Tap the sufuria (secret?)">🍲 <i>♨</i><i>♨</i><i>♨</i> <small>(psst… tap the pot 👀)</small></div>
   </section>`);
@@ -139,15 +141,16 @@ function catering() {
     ${q ? `<div class="slot active"><span>💬</span><div><strong>${q.guests} guests @ ${ksh(q.price)}/head = ${ksh(q.guests * q.price)}</strong><br><small>Too high loses the job, too low loses profit. Fair ≈ KSh 1,200/head.</small></div></div>
     <div class="row"><button class="btn primary" id="q-yes">Accept ✅</button><button class="btn secondary" id="q-no">Decline kindly</button></div>` : `<div class="row"><button class="btn primary" id="q-new">Find a client (1⚡)</button></div>`}
     <p id="cmsg" class="hint"></p>
-    <h3>🧮 Costing puzzle (win skill + cash)</h3>
+    <details class="fold"><summary>🧮 Costing puzzle (win skill + cash)</summary>
     <p class="hint">Cost KSh 700/head. What price gives 40% margin?</p>
-    <div class="row"><button class="btn secondary" data-p="900">900</button><button class="btn secondary" data-p="1170">1,170</button><button class="btn secondary" data-p="1500">1,500</button></div>
+    <div class="row"><button class="btn secondary" data-p="900">900</button><button class="btn secondary" data-p="1170">1,170</button><button class="btn secondary" data-p="1500">1,500</button></div></details>
     <h3>👨🏾‍🍳 Cooks (${(c.staffBy?.cooks || 0)}) — hire in Hotel tab 👥</h3>
     <p class="hint">Big events need cooks (40 guests each) + waiters. Hire by position in Hotel — wages due monthly!</p>
-    <h3>🧪 Secret combos (Chef's Notebook: ${c.recipes.length} found)</h3>
+    <details class="fold"><summary>🧪 Secret combos (Chef's Notebook: ${c.recipes.length} found)</summary>
+    <h3 style="display:none">combos</h3>
     <div class="row"><select id="combo-a" aria-label="Dish A">${["Pilau", "Chapati", "Biriyani", "Ugali", "Fish", "Beans"].map((d) => `<option>${d}</option>`).join("")}</select>
     <select id="combo-b" aria-label="Dish B">${["Kachumbari", "Madondo", "Passion juice", "Greens", "Fish", "Ugali"].map((d) => `<option>${d}</option>`).join("")}</select>
-    <button class="btn secondary" id="combo-go">Taste test 👀</button></div>
+    <button class="btn secondary" id="combo-go">Taste test 👀</button></div></details>
     <h3>🌍 Signature dish lab (global hit or flop?)</h3>
     <p class="hint">Invent it, pay KSh 8,000 tasting, find out after End Month. Skill + rep help — but even great dishes flop ~25%. Hits pay royalties for a year!</p>
     <div class="row"><input id="dish-name" placeholder="Dish name…" maxlength="24" style="flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);padding:8px" />
@@ -199,14 +202,14 @@ function hotel() {
     <p class="hint">Contracts: ${(c?.contracts || []).length ? c.contracts.join(", ") + " ✅ auto-delivering" : "none yet — meet suppliers in Market 🤝"} · Card: ${ksh(c?.card.used || 0)} / ${ksh(c?.card.limit || 100000)}</p>
     <p id="hmsg" class="hint"></p>
     ${unlocked1M ? `<div class="slot pop"><span>🏨</span><div><strong>Boutique hotel arc</strong><br><small>Rooms KSh 2,500–8,000/night. Save KSh 3–8M in phases: restaurant → guesthouse → hotel + garden. Loans + partners help.</small></div></div>` : ""}
-    <h3>🏪 Branches (glorious… and hungry)</h3>
+    <details class="fold"><summary><b>🏪 Branches</b> (glorious… and hungry — tap to open)</summary>
     <p class="hint">Upkeep is due EVERY month, good or bad. No manager on site = half the income. Expand only when the core prints cash.</p>
     ${c ? BRANCHES.map((b) => {
       const owned = (c.branches || []).find((x) => x.id === b.id);
       return `<div class="slot${owned ? " active" : ""}"><span>${owned ? "✅" : "🏪"}</span>
       <div style="flex:1"><strong>${b.name}${owned ? ` · ${owned.months} mo old` : ""}</strong><br><small>${b.desc} Cost ${ksh(b.cost)} · upkeep ${ksh(b.upkeep)}/mo · takes ~${ksh(b.income[0])}–${ksh(b.income[1])}</small></div>
       ${!owned ? `<button class="btn secondary" data-branch="${b.id}" style="min-height:44px">Open</button>` : ""}</div>`;
-    }).join("") : ""}
+    }).join("") : ""}</details>
   </section>`);
   card.querySelectorAll("[data-buy]").forEach((b) => (b.onclick = () => {
     const s = LADDER.find((x) => x.id === b.dataset.buy);
@@ -260,8 +263,8 @@ function money() {
     <h3>💳 Credit card (auto-supply debits)</h3>
     <p class="hint">Balance ${ksh(c.card.used)} / limit ${ksh(c.card.limit)} · 3%/mo interest. Auto-top-ups appear here.</p>
     <div class="row"><button class="btn secondary" id="paycard">Pay KSh 10,000</button></div>
-    <p id="mmsg" class="hint"></p><h3>🏅 Badges (${(c.badges || []).length})</h3>${badges}
-    <h3>📓 Chef's Notebook (${c.recipes.length})</h3><p class="hint">${c.recipes.join(" · ")}</p></section>`);
+    <p id="mmsg" class="hint"></p><details class="fold"><summary>🏅 Badges (${(c.badges || []).length}) — tap to view</summary>${badges}</details>
+    <details class="fold"><summary>📓 Chef's Notebook (${c.recipes.length}) — tap to view</summary><p class="hint">${c.recipes.join(" · ")}</p></details></section>`);
   card.querySelector("#loan").onclick = () => {
     c.cash += 50000; c.debt += 54000; store.update(() => {}); sfx.cash();
     card.querySelector("#mmsg").textContent = "Chama loan in! True cost: pay KSh 54,000. Debts must be repaid — wages on time! 🤝";
@@ -312,8 +315,8 @@ function market() {
     ${shop}
     <h3>🤝 Supplier contracts (automation)</h3>${deals}
     <p id="smsg" class="hint"></p>
-    <h3>🧮 Capacity quiz: 120 guests, how many cooks?</h3>
-    <div class="row"><button class="btn secondary" data-cc="2">2 cooks</button><button class="btn secondary" data-cc="3">3 cooks</button><button class="btn secondary" data-cc="5">5 cooks</button></div>
+    <details class="fold"><summary>🧮 Capacity quiz: 120 guests, how many cooks?</summary>
+    <div class="row"><button class="btn secondary" data-cc="2">2 cooks</button><button class="btn secondary" data-cc="3">3 cooks</button><button class="btn secondary" data-cc="5">5 cooks</button></div></details>
     <h3>💛 Regulars (remember their dish!)</h3>
     <div class="slot"><span>👵</span><div><strong>Auntie Wanjiku — loves Pilau</strong><br><small>Tap to serve her favourite (+loyalty, +tip)</small></div><button class="btn secondary" id="reg" style="min-height:44px">Serve 🍚</button></div>
     <p class="hint">🌙 Rumour: something happens at the market after midnight… (tap Soko prices 3 times?)</p>
