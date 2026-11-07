@@ -4,6 +4,7 @@ import { store } from "./store.js";
 import { DILEMMAS } from "../data/choices.js";
 import { sfx } from "./sound.js";
 import { tickClock } from "./engine.js";
+import { startChain } from "./chains.js";
 
 export function currentDilemma() {
   const c = store.career; if (!c) return null;
@@ -55,6 +56,7 @@ export function resolveChoice(dilemmaId, side) {
   // Quiet teaching line after 3 same-style picks.
   if (c.safeStreak === 3) out += " Mama Chef whispers: “Steady is strong — but one bold step a year grows you faster.”";
   if (c.boldStreak === 3) out += " Mama Chef whispers: “Brave heart! Bank one safe month to catch your breath.”";
+  startChain(d.id, side); // this choice echoes next month
   store.update(() => {});
   return out;
 }
