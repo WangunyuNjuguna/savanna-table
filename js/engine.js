@@ -8,6 +8,7 @@ import { ECONOMY, PACING } from "../data/economy.js";
 import { EVENTS, SEASONS } from "../data/events.js";
 import { sfx } from "./sound.js";
 import { checkBadges } from "./achievements.js";
+import { monthlyMail } from "./mail.js";
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -26,6 +27,7 @@ export function clockText(c) {
 // One clear next step, so the player never feels lost.
 export function nextStep(c) {
   if (!c) return { text: "Start a career below 🌱", tab: "kitchen" };
+  if ((c.mail || []).length && !c.mailSnoozed) return { text: "Answer your mail 💌", tab: "kitchen" };
   if (c.pendingStaff) return { text: "Decide the staff issue 👥", tab: "kitchen" };
   if (c.pendingQuote) return { text: "Answer the waiting client 💬", tab: "catering" };
   const p = c.pantry || {};
@@ -62,6 +64,8 @@ export function ensure(c) {
   c.regulars = c.regulars ?? {}; c.badges = c.badges ?? [];
   c.goal = c.goal ?? "Earn your first KSh 10,000 profit";
   c.report = c.report ?? null; c.sufuriaTaps = c.sufuriaTaps ?? 0;
+  c.mail = c.mail || []; c.mailDone = c.mailDone || {};
+  c.mailSnoozed = c.mailSnoozed ?? false; c.mailResult = c.mailResult ?? null;
   c.perk = c.perk ?? pick(["known for pilau 🍚", "warm smile 😊", "fast chopper 🔪", "owns 2 sufurias 🍲"]);
   return c;
 }
@@ -207,6 +211,8 @@ export function endMonth() {
   try { const m = lifeHappens(c); if (m) log.push(m); } catch (e) {}
   // Fresh applicants knock each month.
   try { refreshApplicants(c); } catch (e) {}
+  // Decision mail: unread mail auto-resolves, next mail arrives.
+  try { for (const n of monthlyMail(c)) log.push(n); } catch (e) {}
   // Month rollover.
   const profit = (c.monthProfit || 0) + got - bills;
   c.history.push(Math.round(c.cash));
