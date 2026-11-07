@@ -7,6 +7,7 @@ import { applyLang } from "./i18n.js";
 import { MENTOR_TIPS } from "../data/text.js";
 import { ensure, netWorth } from "./engine.js";
 import { sfx } from "./sound.js";
+import { FIRST_WIN } from "../data/firstwin.js";
 
 const $ = (id) => document.getElementById(id);
 const ksh = (n) => "KSh " + Math.round(n).toLocaleString("en-KE");
@@ -159,6 +160,18 @@ function boot() {
         <small>Best: ${(c.report?.events || [])[0] || "first steps"}<br>“${(c.badges || []).length} badges. ${(c.lessons || 0) ? "You survived hard months — strong! 🌱" : "Steady hands, warm heart. — Mama Chef 💛"}”</small></div></div>
         <div class="row"><button class="btn primary" id="yr-ok" style="flex:1">Sawa! Screenshot 📸</button></div>`;
       card.querySelector("#yr-ok").onclick = () => { m.hidden = true; sfx.good(); };
+    }
+    // First-win celebration: Mama Chef throws confetti for the church tea.
+    if (c?.celebrateFirstWin) {
+      c.celebrateFirstWin = false;
+      const m2 = $("modal"), card2 = $("modal-card");
+      m2.hidden = false;
+      card2.innerHTML = `<h2>🎉 First job served!</h2>
+        <div class="reveal pop"><b>${ksh(FIRST_WIN.rewardCash)} gift</b><br><small>${FIRST_WIN.celebration}</small></div>
+        <div class="slot active"><span>🏅</span><div><strong>Badge earned: First Win 🥇</strong><br><small>${FIRST_WIN.afterText}</small></div></div>
+        <div class="row"><button class="btn primary" id="fw-ok" style="flex:1">Asante! 🙏</button></div>`;
+      card2.querySelector("#fw-ok").onclick = () => { m2.hidden = true; sfx.good(); };
+      confetti();
     }
   });
   store.onChange(paint);
