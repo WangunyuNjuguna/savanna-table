@@ -7,6 +7,8 @@ import { BADGES } from "./achievements.js";
 import { sfx } from "./sound.js";
 import { currentDilemma, resolveChoice } from "./choices.js";
 import { activeMail, resolveMail } from "./mail.js";
+import { questStage, missingForFirstWin } from "./firstwin.js";
+import { FIRST_WIN } from "../data/firstwin.js";
 import { potScene, hotelScene, marketScene, cateringScene, worthBar } from "./art.js";
 import { ensurePantry, gigNeeds, cookGig, buySupply, meetSupplier, payCard, syncRooms } from "./pantry.js";
 import { ensureStaff, hireApplicant, fireMember, resolveStaff, createDish, buyBranch, roleName, flawLabel } from "./staff.js";
@@ -39,6 +41,7 @@ function kitchen() {
     ${potScene(c.skill)}${worthBar(netWorth(c))}
     ${msgBar(c)}
     <div id="mailbox">${mailCardHtml(c)}</div>
+    <div id="quest">${questCardHtml(c)}</div>
     <div class="grid2">
       <div class="kpi"><small>Cash</small><b>${ksh(c.cash)}</b></div>
       <div class="kpi"><small>Net worth</small><b>${ksh(netWorth(c))}</b></div>
@@ -162,6 +165,19 @@ function mailCardHtml(c) {
       <div class="row"><button class="linklike" data-mail-pick="later" style="flex:1">Decide later</button></div>
       <p class="hint">Tip: you can also swipe this card left or right 👆</p>
     </div>`;
+  } catch (e) { return ""; }
+}
+// First-win quest card: the guided church-tea job, step by step.
+function questCardHtml(c) {
+  try {
+    const q = questStage(c);
+    if (!q) return "";
+    if (q.stage === "buy") {
+      const miss = missingForFirstWin(c);
+      const list = Object.keys(miss).map((k) => `${miss[k].gap}${miss[k].unit} ${k}`).join(" · ");
+      return `<div class="slot active"><span>🌟</span><div style="flex:1"><strong>First job: church tea for ${FIRST_WIN.guests}</strong><br><small>Step 1/2 — buy: ${list} (Market 🧺)</small></div></div>`;
+    }
+    return `<div class="slot active"><span>🌟</span><div style="flex:1"><strong>First job: church tea for ${FIRST_WIN.guests}</strong><br><small>Step 2/2 — cook ${FIRST_WIN.guests}+ guests here in Kitchen. Mama Chef believes! 🍲</small></div></div>`;
   } catch (e) { return ""; }
 }
 function reportHtml(c) {
