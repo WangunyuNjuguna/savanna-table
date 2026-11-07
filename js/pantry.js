@@ -4,6 +4,7 @@ import { store } from "./store.js";
 import { SUPPLIES, PER_GUEST, PER_ROOM_MONTH, ROOMS_BY_UPGRADE, ROOM_RATE, CONTRACTS } from "../data/pantry.js";
 import { sfx } from "./sound.js";
 import { tickClock } from "./engine.js";
+import { checkFirstWinPantry, completeFirstWinCook } from "./firstwin.js";
 const ksh = (n) => "KSh " + Math.round(n).toLocaleString("en-KE");
 
 export const sup = (id) => SUPPLIES.find((s) => s.id === id);
@@ -35,7 +36,9 @@ export function buySupply(id, qty) {
   c.pantryAge[id] = 0; tickClock(c); c.actionsLeft -= 1;
   c.monthProfit = (c.monthProfit || 0) - cost;
   store.update(() => {}); sfx.cash();
-  return `Bought ${qty} ${s.unit} ${s.name} for ${ksh(cost)}. 🧺`;
+  let fw = "";
+  try { if (checkFirstWinPantry(c)) fw = " ✅ Pantry ready for the church tea! Now cook it in Kitchen 🍲"; } catch (e) {}
+  return `Bought ${qty} ${s.unit} ${s.name} for ${ksh(cost)}. 🧺${fw}`;
 }
 // How much a gig for G guests needs (scaled by cook style).
 export function gigNeeds(guests, style = "exact") {
@@ -95,8 +98,10 @@ export function cookGig(guests, style) {
   c.cash += Math.round(profit * 0.5); c.balanceDue = (c.balanceDue || 0) + Math.round(profit * 0.5);
   c.monthProfit = (c.monthProfit || 0) + profit; c.skill += 1;
   c.cookStyle = style;
+  let fw = "";
+  try { fw = completeFirstWinCook(c, guests) || ""; } catch (e) {}
   store.update(() => {}); sfx.cash();
-  return `Fed ${guests} guests (${style})! +${ksh(profit)} value, deposit banked.${cardTop ? ` Card auto-bought shortfall ${ksh(cardTop)}. 💳` : ""}${note}`;
+  return `Fed ${guests} guests (${style})! +${ksh(profit)} value, deposit banked.${cardTop ? ` Card auto-bought shortfall ${ksh(cardTop)}. 💳` : ""}${note}${fw}`;
 }
 // Meet a supplier (1 action): unlocks auto-delivery on credit card.
 export function meetSupplier(id) {
