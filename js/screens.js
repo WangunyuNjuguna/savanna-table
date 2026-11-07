@@ -9,6 +9,7 @@ import { currentDilemma, resolveChoice } from "./choices.js";
 import { activeMail, resolveMail } from "./mail.js";
 import { questStage, missingForFirstWin } from "./firstwin.js";
 import { FIRST_WIN } from "../data/firstwin.js";
+import { pendingChain, resolveChain } from "./chains.js";
 import { potScene, hotelScene, marketScene, cateringScene, worthBar } from "./art.js";
 import { ensurePantry, gigNeeds, cookGig, buySupply, meetSupplier, payCard, syncRooms } from "./pantry.js";
 import { ensureStaff, hireApplicant, fireMember, resolveStaff, createDish, buyBranch, roleName, flawLabel } from "./staff.js";
@@ -42,6 +43,7 @@ function kitchen() {
     ${msgBar(c)}
     <div id="mailbox">${mailCardHtml(c)}</div>
     <div id="quest">${questCardHtml(c)}</div>
+    <div id="chain">${chainCardHtml(c)}</div>
     <div class="grid2">
       <div class="kpi"><small>Cash</small><b>${ksh(c.cash)}</b></div>
       <div class="kpi"><small>Net worth</small><b>${ksh(netWorth(c))}</b></div>
@@ -120,6 +122,11 @@ function kitchen() {
       }
     }, { passive: true });
   }
+  // Choice echoes: last month's decision returns as a small follow-up. Skippable.
+  card.querySelectorAll("[data-chain-pick]").forEach((b) => (b.onclick = () => {
+    card.querySelector("#kmsg").textContent = resolveChain(b.dataset.chainPick);
+    setTimeout(goEnd, 1400);
+  }));
   // Cook buttons: metric catering jobs (exact / generous / scant).
   card.querySelectorAll("[data-cook]").forEach((b) => (b.onclick = () => {
     const g = +(card.querySelector("#guests")?.value || 50);
@@ -178,6 +185,20 @@ function questCardHtml(c) {
       return `<div class="slot active"><span>🌟</span><div style="flex:1"><strong>First job: church tea for ${FIRST_WIN.guests}</strong><br><small>Step 1/2 — buy: ${list} (Market 🧺)</small></div></div>`;
     }
     return `<div class="slot active"><span>🌟</span><div style="flex:1"><strong>First job: church tea for ${FIRST_WIN.guests}</strong><br><small>Step 2/2 — cook ${FIRST_WIN.guests}+ guests here in Kitchen. Mama Chef believes! 🍲</small></div></div>`;
+  } catch (e) { return ""; }
+}
+// Choice echo: last month's decision comes back. Two roads, one primary, skippable.
+function chainCardHtml(c) {
+  try {
+    const p = pendingChain(c);
+    if (!p) return "";
+    const opts = p.follow.options.map((o) =>
+      `<button class="btn ${o.primary ? "primary" : "secondary"}" data-chain-pick="${o.id}" style="flex:1">${o.label}<br><small>${o.desc}</small></button>`).join("");
+    return `<div class="slot active"><span>🔗</span><div style="flex:1">
+      <strong>${p.follow.title}</strong><br><small>${p.follow.text}</small>
+      <div class="row">${opts}</div>
+      <button class="linklike" data-chain-pick="skip">Not now — let it rest</button>
+    </div></div>`;
   } catch (e) { return ""; }
 }
 function reportHtml(c) {
