@@ -9,6 +9,8 @@ import { EVENTS, SEASONS } from "../data/events.js";
 import { sfx } from "./sound.js";
 import { checkBadges } from "./achievements.js";
 import { monthlyMail } from "./mail.js";
+import { FIRST_WIN } from "../data/firstwin.js";
+import { questStep, monthlyFirstWin } from "./firstwin.js";
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -28,6 +30,8 @@ export function clockText(c) {
 export function nextStep(c) {
   if (!c) return { text: "Start a career below 🌱", tab: "kitchen" };
   if ((c.mail || []).length && !c.mailSnoozed) return { text: "Answer your mail 💌", tab: "kitchen" };
+  const qs = questStep(c);
+  if (qs) return qs;
   if (c.pendingStaff) return { text: "Decide the staff issue 👥", tab: "kitchen" };
   if (c.pendingQuote) return { text: "Answer the waiting client 💬", tab: "catering" };
   const p = c.pantry || {};
@@ -66,6 +70,8 @@ export function ensure(c) {
   c.report = c.report ?? null; c.sufuriaTaps = c.sufuriaTaps ?? 0;
   c.mail = c.mail || []; c.mailDone = c.mailDone || {};
   c.mailSnoozed = c.mailSnoozed ?? false; c.mailResult = c.mailResult ?? null;
+  c.firstWin = c.firstWin ?? null; c.graduated = c.graduated ?? false;
+  c.celebrateFirstWin = c.celebrateFirstWin ?? false;
   c.perk = c.perk ?? pick(["known for pilau 🍚", "warm smile 😊", "fast chopper 🔪", "owns 2 sufurias 🍲"]);
   return c;
 }
@@ -153,7 +159,7 @@ export function endMonth() {
   const c = store.career; if (!c) return null;
   ensure(c);
   const diff = store.settings.difficulty;
-  const mult = diff === "easy" ? 0.8 : diff === "hard" ? 1.25 : 1;
+  const mult = (diff === "easy" ? 0.8 : diff === "hard" ? 1.25 : 1) * (c.graduated ? FIRST_WIN.rampBillMult : 1);
   // Wages from your named crew + base bills. A manager frees your time (+1 action).
   let wages = 0;
   try { wages = wageBill(c); } catch (e) { wages = 0; }
@@ -213,6 +219,8 @@ export function endMonth() {
   try { refreshApplicants(c); } catch (e) {}
   // Decision mail: unread mail auto-resolves, next mail arrives.
   try { for (const n of monthlyMail(c)) log.push(n); } catch (e) {}
+  // First-win quest: count quiet months, close kindly if ignored.
+  try { for (const n of monthlyFirstWin(c)) log.push(n); } catch (e) {}
   // Month rollover.
   const profit = (c.monthProfit || 0) + got - bills;
   c.history.push(Math.round(c.cash));
