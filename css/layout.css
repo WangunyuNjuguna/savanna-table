@@ -124,4 +124,15 @@ details.fold {
   padding: 10px 12px; background: #fff; margin-top: 10px;
 }
 details.fold summary { cursor: pointer; font-weight: 700; color: var(--green); min-height: 44px; }
+/* Decision mail card: swipe or tap. Big touch targets, calm borders. */
+.mailcard {
+  border: 2px solid var(--amber); border-radius: 16px; padding: 12px;
+  background: linear-gradient(180deg, #fffdf7, #fdf3dd); margin: 8px 0;
+  touch-action: pan-y;
+}
+.mailhead { display: flex; gap: 8px; align-items: center; }
+.mailhead strong { font-size: 17px; }
+.mailchoices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.mailchoices .btn small { font-weight: 400; line-height: 1.5; }
+.linklike { background: none; border: 0; color: var(--green); text-decoration: underline; min-height: 44px; font-size: 15px; }
 @media (min-width: 700px) { .main { padding: 18px 18px 110px; } }
