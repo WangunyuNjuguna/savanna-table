@@ -27,6 +27,7 @@ export function blankCareer(name = "Career 1") {
     cookStyle: "exact", recipes: ["Pilau", "Chapati"], regulars: {},
     crew: [], crewMigrated: false, applicants: [], dishes: [], branches: [], pendingStaff: null,
     mail: ["church-tea"], mailDone: {}, mailSnoozed: false, mailResult: null,
+    firstWin: null, graduated: false, celebrateFirstWin: false,
     badges: [], monthProfit: 0, balanceDue: 0, goal: "Earn your first KSh 10,000 profit",
     report: null, sufuriaTaps: 0, lessons: 0, hardMonths: 0, seenGuide: false,
     perk: "warm smile 😊", upgradesOwned: ["home"]
