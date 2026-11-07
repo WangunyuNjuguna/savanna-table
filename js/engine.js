@@ -11,6 +11,7 @@ import { checkBadges } from "./achievements.js";
 import { monthlyMail } from "./mail.js";
 import { FIRST_WIN } from "../data/firstwin.js";
 import { questStep, monthlyFirstWin } from "./firstwin.js";
+import { monthlyChains } from "./chains.js";
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -72,6 +73,7 @@ export function ensure(c) {
   c.mailSnoozed = c.mailSnoozed ?? false; c.mailResult = c.mailResult ?? null;
   c.firstWin = c.firstWin ?? null; c.graduated = c.graduated ?? false;
   c.celebrateFirstWin = c.celebrateFirstWin ?? false;
+  c.chains = c.chains || []; c.chainPending = c.chainPending ?? null;
   c.perk = c.perk ?? pick(["known for pilau 🍚", "warm smile 😊", "fast chopper 🔪", "owns 2 sufurias 🍲"]);
   return c;
 }
@@ -221,6 +223,8 @@ export function endMonth() {
   try { for (const n of monthlyMail(c)) log.push(n); } catch (e) {}
   // First-win quest: count quiet months, close kindly if ignored.
   try { for (const n of monthlyFirstWin(c)) log.push(n); } catch (e) {}
+  // Choice echoes: last month's decision returns as news (or a small follow-up).
+  try { for (const n of monthlyChains(c)) log.push(n); } catch (e) {}
   // Month rollover.
   const profit = (c.monthProfit || 0) + got - bills;
   c.history.push(Math.round(c.cash));
