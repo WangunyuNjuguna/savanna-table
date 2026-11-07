@@ -1,59 +1,72 @@
 // js/mail.js - swipe-style decision mail. Skippable, auto-resolves, never blocks.
-// One card, two choices, each previewing effects in 3 tiny icons (cash/time/rep).
-// Imports the quest starter (data-only module) plus the clock tick.
+// One mail at a time, answered in Kitchen. Ignored mail is noted at month-end.
 import { store } from "./store.js";
+import { MAILS } from "../data/mail.js";
 import { sfx } from "./sound.js";
-import { ksh } from "./i18n.js";
-import { activeCareer } from "./store.js";
 import { tickClock } from "./engine.js";
 import { startFirstWin } from "./firstwin.js";
-import { MAILS } from "../data/mail.js";
 
 export function mailById(id) { return MAILS.find((m) => m.id === id); }
-// The one active letter: first unanswered mail in the queue.
-export function activeMail() {
-  const c = activeCareer(); if (!c) return null;
-  const id = (c.mail || []).find((m) => !(c.mailDone || {})[m]);
-  return id ? mailById(id) : null;
+
+// The mail waiting for a decision (null when snoozed or none).
+export function activeMail(c) {
+  if (!c || !c.mail || !c.mail.length || c.mailSnoozed) return null;
+  return mailById(c.mail[0]);
 }
-// Answer a letter. Returns the one-line result string shown under the card.
+
+// Answer the waiting mail: "left", "right" or "later".
 export function resolveMail(side) {
-  const c = activeCareer();
-  const m = activeMail();
-  if (!c || !m) return "No mail right now.";
+  const c = store.career; if (!c) return "Start a career first 🌱";
+  const m = activeMail(c); if (!m) return "No mail waiting. 📭";
+  if (side === "later") {
+    c.mailSnoozed = true; store.update(() => {});
+    return "Sawa — the mail waits till month-end. 💌";
+  }
   const opt = side === "left" ? m.left : m.right;
-  // Apply effects.
+  if (!opt) return "Hmm?";
+  if ((opt.energy || 0) > 0 && (c.actionsLeft || 0) < opt.energy) {
+    return "No energy left — answer after End Month. 😴";
+  }
   c.cash += opt.cash || 0;
   c.monthProfit = (c.monthProfit || 0) + (opt.cash || 0);
-  c.reputation = Math.max(1, Math.min(5, Math.round(((c.reputation || 3) + (opt.rep || 0)) * 100) / 100));
-  c.morale = Math.max(0, Math.min(100, (c.morale ?? 70) + (opt.morale || 0)));
-  if (opt.stock) c.stock = (c.stock || 0) + opt.stock;
-  if (opt.rooms) { c.rooms = (c.rooms || 0) + opt.rooms; }
-  if (side === "left" && m.useEnergy !== false) {
-    if ((c.actionsLeft || 0) < 1) return "No energy left today — rest or end the month, then answer. ⚡";
-    tickClock(c); c.actionsLeft -= 1;
+  if (opt.rep) c.reputation = Math.max(0, Math.min(5, c.reputation + opt.rep));
+  if (opt.morale) c.morale = Math.max(0, Math.min(100, c.morale + opt.morale));
+  if (opt.enquiries) c.enquiries = (c.enquiries || 0) + opt.enquiries;
+  if (opt.pantry) {
+    try {
+      c.pantry = c.pantry || {};
+      for (const k of Object.keys(opt.pantry)) {
+        c.pantry[k] = Math.round(((c.pantry[k] || 0) + opt.pantry[k]) * 100) / 100;
+      }
+    } catch (e) {}
   }
-  c.mailResult = opt.result;
+  if (opt.energy) { tickClock(c); c.actionsLeft -= opt.energy; }
   // Accepting the church tea starts the guided first job.
   if (m.id === "church-tea" && side === "left") { try { startFirstWin(c); } catch (e) {} }
   // Done with this mail forever.
   c.mailDone = c.mailDone || {}; c.mailDone[m.id] = true;
   c.mail = (c.mail || []).filter((id) => id !== m.id);
-  store.update(() => {}); sfx.good();
+  c.mailResult = opt.result;
+  store.update(() => {});
+  (opt.cash || 0) >= 0 ? sfx.cash() : sfx.click();
   return opt.result;
 }
-// Month-end: unread mail drifts by kindly; a new letter may arrive (max 1 waiting).
+
+// Month-end: unread mail auto-resolves (a kind "missed it" note), next mail arrives.
 export function monthlyMail(c) {
   const notes = [];
-  if ((c.mail || []).length) {
-    const m = mailById(c.mail[0]);
-    c.mailDone = c.mailDone || {}; c.mailDone[c.mail[0]] = true;
+  const pending = (c.mail || []).map(mailById).find(Boolean);
+  if (pending) {
+    notes.push(`💌 Missed mail (“${pending.subject}”): ${pending.skip}`);
+    if (pending.skipRep) c.reputation = Math.max(0, c.reputation + pending.skipRep);
     c.mail = [];
-    c.mailSnoozed = false;
-    notes.push(`💌 You missed "${m ? m.title : "a letter"}" — no harm done, life is busy.`);
   }
-  // Queue the next unseen mail, if any remain and inbox is empty.
-  const next = MAILS.map((m) => m.id).find((id) => !(c.mailDone || {})[id]);
-  if (next) { c.mail = [next]; c.mailResult = null; }
+  c.mailSnoozed = false; c.mailResult = null;
+  // Next undone mail (church-tea only arrives with a new career).
+  const done = c.mailDone || {};
+  if (!(c.mail || []).length && Math.random() < 0.8) {
+    const next = MAILS.find((m) => !done[m.id] && m.id !== "church-tea");
+    if (next) c.mail.push(next.id);
+  }
   return notes;
 }
