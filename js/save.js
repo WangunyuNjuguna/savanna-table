@@ -26,6 +26,7 @@ export function blankCareer(name = "Career 1") {
     pantryAge: {}, rooms: 0, occupancy: 0, contracts: [], card: { limit: 100000, used: 0 },
     cookStyle: "exact", recipes: ["Pilau", "Chapati"], regulars: {},
     crew: [], crewMigrated: false, applicants: [], dishes: [], branches: [], pendingStaff: null,
+    mail: ["church-tea"], mailDone: {}, mailSnoozed: false, mailResult: null,
     badges: [], monthProfit: 0, balanceDue: 0, goal: "Earn your first KSh 10,000 profit",
     report: null, sufuriaTaps: 0, lessons: 0, hardMonths: 0, seenGuide: false,
     perk: "warm smile 😊", upgradesOwned: ["home"]
@@ -77,7 +78,7 @@ export function exportSave(career) {
   const blob = new Blob([JSON.stringify(career, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `savanna-table-${(career?.name || "career").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}.json`;
+  a.download = "savanna-table-" + String((career && career.name) || "career").toLowerCase().split(" ").join("-") + ".json";
   document.body.appendChild(a); // attached = reliable on mobile browsers
   a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
